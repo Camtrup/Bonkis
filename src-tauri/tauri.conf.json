@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "bonkis",
-        "width": 800,
-        "height": 600,
+        "title": "Bonkis",
+        "width": 1400,
+        "height": 900,
         "resizable": true,
         "fullscreen": false
       }
