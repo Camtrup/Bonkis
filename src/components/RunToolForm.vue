@@ -22,14 +22,16 @@ const workingDir = ref("");
 const submitting = ref(false);
 const error = ref("");
 
+const showDropdown = ref(false);
+
+const DROPDOWN_HIDE_DELAY = 150;
+
 // Filtered list for combobox
 const filteredTools = computed(() => {
   const q = toolSearch.value.toLowerCase();
   if (!q) return availableTools.value.slice(0, 50);
   return availableTools.value.filter((t) => t.toLowerCase().includes(q)).slice(0, 50);
 });
-
-const showDropdown = ref(false);
 
 onMounted(async () => {
   try {
@@ -74,8 +76,17 @@ async function submit() {
 }
 
 function hideDropdown() {
-  setTimeout(() => { showDropdown.value = false; }, 150);
+  setTimeout(() => { showDropdown.value = false; }, DROPDOWN_HIDE_DELAY);
 }
+
+const parsedParentArgs = computed(() => {
+  if (!props.parentNode) return "";
+  try {
+    return (JSON.parse(props.parentNode.args) as string[]).join(" ");
+  } catch {
+    return props.parentNode.args;
+  }
+});
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key === "Escape") emit("close");
@@ -92,7 +103,7 @@ function onKeydown(e: KeyboardEvent) {
 
       <div v-if="parentNode" class="parent-info">
         <span class="label">Parent:</span>
-        <span class="mono">{{ parentNode.tool }} {{ JSON.parse(parentNode.args).join(" ") }}</span>
+        <span class="mono">{{ parentNode.tool }} {{ parsedParentArgs }}</span>
       </div>
 
       <div class="field">

@@ -3,6 +3,8 @@ import { ref } from "vue";
 import { getSessionTree, getNodeOutput } from "../lib/tauri";
 import type { NodeRow, OutputRow, NodeOutputEvent, NodeStatusEvent } from "../lib/types";
 
+let _outputIdCounter = 0;
+
 export const useTreeStore = defineStore("tree", () => {
   const nodes = ref<Record<string, NodeRow>>({});
   const outputBuffers = ref<Record<string, OutputRow[]>>({});
@@ -37,7 +39,7 @@ export const useTreeStore = defineStore("tree", () => {
       outputBuffers.value[event.node_id] = [];
     }
     const fakeRow: OutputRow = {
-      id: Date.now(),
+      id: --_outputIdCounter,
       node_id: event.node_id,
       stream: event.stream,
       line: event.line,
