@@ -182,13 +182,15 @@ async fn run_node_task(
                     finished_at: Some(finished_at),
                 },
             );
-            running_map.lock().unwrap().remove(&node_id);
+            if let Ok(mut running) = running_map.lock() {
+                running.remove(&node_id);
+            }
             return;
         }
     };
 
-    let stdout = child.stdout.take().expect("stdout");
-    let stderr = child.stderr.take().expect("stderr");
+    let stdout = child.stdout.take().expect("Failed to capture stdout pipe");
+    let stderr = child.stderr.take().expect("Failed to capture stderr pipe");
 
     enum Line {
         Out(String),
@@ -221,7 +223,7 @@ async fn run_node_task(
     });
     drop(tx);
 
-    let mut first_stdout_line: Option<String> = None;
+    let mut summary_line: Option<String> = None;
     let mut done_count = 0u32;
     let mut killed = false;
 
@@ -240,8 +242,8 @@ async fn run_node_task(
                     }
                     Some(Line::Out(line)) => {
                         let ts = Utc::now().timestamp_millis();
-                        if first_stdout_line.is_none() && !line.trim().is_empty() {
-                            first_stdout_line = Some(line.clone());
+                        if summary_line.is_none() && !line.trim().is_empty() {
+                            summary_line = Some(line.clone());
                         }
                         let db_path2 = db_path.clone();
                         let node_id2 = node_id.clone();
@@ -305,7 +307,7 @@ async fn run_node_task(
         "error"
     };
     let finished_at = Utc::now().timestamp_millis();
-    let summary = first_stdout_line.clone();
+    let summary = summary_line.clone();
 
     {
         let db_path2 = db_path.clone();
@@ -334,5 +336,7 @@ async fn run_node_task(
         },
     );
 
-    running_map.lock().unwrap().remove(&node_id);
+    if let Ok(mut running) = running_map.lock() {
+        running.remove(&node_id);
+    }
 }
